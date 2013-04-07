@@ -3,18 +3,22 @@ import time
 import urllib
 from urlparse import urljoin
 from urlparse import urlparse
-from BeautifulSoup import *
 import re
 import dateutil.parser as parser
 
 conn = sqlite3.connect('content.sqlite')
 cur = conn.cursor()
+conn.text_factory = str
 
 baseurl = "http://download.gmane.org/gmane.comp.cms.sakai.devel/"
 
 cur.execute('''CREATE TABLE IF NOT EXISTS Messages 
     (id INTEGER UNIQUE, email TEXT, sent_at TEXT, 
      subject TEXT, headers TEXT, body TEXT)''')
+
+# This will be manually filled in
+cur.execute('''CREATE TABLE IF NOT EXISTS Mapping 
+    (old TEXT, new TEXT)''')
 
 start = 0
 many = 0
@@ -51,6 +55,11 @@ while True:
 
     print url,len(text)
 
+    if not text.startswith("From "):
+        print text
+        print "Does not start with From "
+        quit ()
+
     pos = text.find("\n\n")
     if pos > 0 : 
         hdr = text[:pos]
@@ -64,10 +73,14 @@ while True:
     x = re.findall('\nFrom: .* <(\S+@\S+)>\n', hdr)
     if len(x) == 1 : 
         email = x[0];
+        email = email.strip().lower()
+        email = email.replace("<","")
     else:
         x = re.findall('\nFrom: (\S+@\S+)\n', hdr)
         if len(x) == 1 : 
             email = x[0];
+            email = email.strip().lower()
+            email = email.replace("<","")
 
     date = None
     y = re.findall('\Date: .*, (.*)\n', hdr)
@@ -84,13 +97,13 @@ while True:
 
     subject = None
     z = re.findall('\Subject: (.*)\n', hdr)
-    if len(z) == 1 : subject = z[0];
+    if len(z) == 1 : subject = z[0].strip().lower();
 
     print "   ",email,sent_at,subject
     cur.execute('''INSERT OR IGNORE INTO Messages (id, email, sent_at, subject, headers, body) 
         VALUES ( ?, ?, ?, ?, ?, ? )''', ( start, email, sent_at, subject, hdr, body))
     conn.commit()
-    time.sleep(2)
+    time.sleep(1)
 
 cur.close()
 
