@@ -5,6 +5,20 @@ import re
 import dateutil.parser as parser
 import zlib
 
+def fixsender(sender) :
+    if sender is None : return None
+    mpieces = sender.split("@")
+    if len(mpieces) != 2 : return sender
+    dns = mpieces[1]
+    x = dns
+    pieces = dns.split(".")
+    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") :
+        dns = ".".join(pieces[-2:])
+    else:
+        dns = ".".join(pieces[-3:])
+    # if dns != x : print x,dns
+    return mpieces[0] + '@' + dns
+
 # Parse out the info...
 def parseheader(hdr):
     if hdr is None or len(hdr) < 1 : return None
@@ -18,6 +32,9 @@ def parseheader(hdr):
         if len(x) >= 1 :
             sender = x[0].strip()
             sender = sender.replace('<','').replace('>','')
+
+    # normalize the domain name of Email addresses
+    sender = fixsender(sender)
 
     date = None
     y = re.findall('\nDate: .*, (.*)\n', hdr)
@@ -74,6 +91,7 @@ for message_row in cur_1 :
     if sender is None : continue
     sender = sender.lower()
     sender = sender.replace('<','').replace('>','')
+    sender = fixsender(sender)
     if 'gmane.org' in sender : continue
     if sender in allsenders: continue
     allsenders.append(sender)
@@ -81,11 +99,9 @@ for message_row in cur_1 :
 mapping = dict()
 cur_1.execute('''SELECT old,new FROM Mapping''')
 for message_row in cur_1 :
-    mapping[message_row[0].strip().lower()] = message_row[1].strip().lower()
+    mapping[message_row[0].strip().lower()] = fixsender(message_row[1].strip().lower())
 
 print "Loaded allsenders",len(allsenders),"and mapping",len(mapping)
-
-print mapping
 
 cur_1.execute('''SELECT headers, body, sent_at 
     FROM Messages ORDER BY sent_at''')
