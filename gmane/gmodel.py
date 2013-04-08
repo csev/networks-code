@@ -5,8 +5,35 @@ import re
 import dateutil.parser as parser
 import zlib
 
-def fixsender(sender) :
+dnsmapping = dict()
+mapping = dict()
+
+def fixsender(sender,allsenders=None) :
+    global dnsmapping
+    global mapping
     if sender is None : return None
+    sender = sender.strip().lower()
+    sender = sender.replace('<','').replace('>','')
+
+    # Check if we have a hacked gmane.org from address
+    if allsenders is not None and sender.endswith('gmane.org') : 
+        pieces = sender.split('-')
+        realsender = None
+        for s in allsenders:
+            if s.startswith(pieces[0]) :
+                realsender = sender
+                sender = s
+                # print realsender, sender
+                break
+        if realsender is None : 
+            for s in mapping:
+                if s.startswith(pieces[0]) :
+                    realsender = sender
+                    sender = mapping[s]
+                    # print realsender, sender
+                    break
+        if realsender is None : sender = pieces[0]
+
     mpieces = sender.split("@")
     if len(mpieces) != 2 : return sender
     dns = mpieces[1]
@@ -17,24 +44,24 @@ def fixsender(sender) :
     else:
         dns = ".".join(pieces[-3:])
     # if dns != x : print x,dns
+    # if dns != dnsmapping.get(dns,dns) : print dns,dnsmapping.get(dns,dns)
+    dns = dnsmapping.get(dns,dns)
     return mpieces[0] + '@' + dns
 
 # Parse out the info...
-def parseheader(hdr):
+def parseheader(hdr, allsenders=None):
     if hdr is None or len(hdr) < 1 : return None
     sender = None
     x = re.findall('\nFrom: .* <(\S+@\S+)>\n', hdr)
     if len(x) >= 1 :
-        sender = x[0].strip().lower()
-        sender = sender.replace('<','').replace('>','')
+        sender = x[0]
     else:
         x = re.findall('\nFrom: (\S+@\S+)\n', hdr)
         if len(x) >= 1 :
-            sender = x[0].strip()
-            sender = sender.replace('<','').replace('>','')
+            sender = x[0]
 
     # normalize the domain name of Email addresses
-    sender = fixsender(sender)
+    sender = fixsender(sender, allsenders)
 
     date = None
     y = re.findall('\nDate: .*, (.*)\n', hdr)
@@ -84,24 +111,27 @@ conn_1 = sqlite3.connect('content.sqlite')
 conn_1.text_factory = str
 cur_1 = conn_1.cursor()
 
-allsenders = list()
-cur_1.execute('''SELECT email FROM Messages''')
+cur_1.execute('''SELECT old,new FROM DNSMapping''')
 for message_row in cur_1 :
-    sender = message_row[0]
-    if sender is None : continue
-    sender = sender.lower()
-    sender = sender.replace('<','').replace('>','')
-    sender = fixsender(sender)
-    if 'gmane.org' in sender : continue
-    if sender in allsenders: continue
-    allsenders.append(sender)
+    dnsmapping[message_row[0].strip().lower()] = message_row[1].strip().lower()
 
 mapping = dict()
 cur_1.execute('''SELECT old,new FROM Mapping''')
 for message_row in cur_1 :
-    mapping[message_row[0].strip().lower()] = fixsender(message_row[1].strip().lower())
+    old = fixsender(message_row[0])
+    new = fixsender(message_row[1])
+    mapping[old] = fixsender(new)
 
-print "Loaded allsenders",len(allsenders),"and mapping",len(mapping)
+allsenders = list()
+cur_1.execute('''SELECT email FROM Messages''')
+for message_row in cur_1 :
+    sender = fixsender(message_row[0])
+    if sender is None : continue
+    if 'gmane.org' in sender : continue
+    if sender in allsenders: continue
+    allsenders.append(sender)
+
+print "Loaded allsenders",len(allsenders),"and mapping",len(mapping),"dns mapping",len(dnsmapping)
 
 cur_1.execute('''SELECT headers, body, sent_at 
     FROM Messages ORDER BY sent_at''')
@@ -110,38 +140,20 @@ senders = dict()
 subjects = dict()
 guids = dict()
 
+count = 0
+
 for message_row in cur_1 :
     hdr = message_row[0]
-    parsed = parseheader(hdr)
+    parsed = parseheader(hdr, allsenders)
     if parsed is None: continue
     (guid, sender, subject, sent_at) = parsed
-
-    # print guid, sender, subject, sent_at
-
-    # Check if we have a hacked gmane.org from address
-    if sender.endswith('gmane.org') : 
-        pieces = sender.split('-')
-        realsender = None
-        for s in allsenders:
-            if s.startswith(pieces[0]) :
-                realsender = sender
-                sender = s
-                # print realsender, sender
-                break
-        if realsender is None : 
-            for s in mapping:
-                if s.startswith(pieces[0]) :
-                    realsender = sender
-                    sender = mapping[s]
-                    # print realsender, sender
-                    break
-        if realsender is None : sender = pieces[0]
-
-    # Check Mapping
-    ## if mapping.get(sender,None) is not None:
-        ## print "MAPPING=====",sender, mapping.get(sender,None)
-
+    
+    # Apply the sender mapping
     sender = mapping.get(sender,sender)
+
+    count = count + 1
+    if count % 250 == 1 : print count,sent_at, sender
+    # print guid, sender, subject, sent_at
 
     if 'gmane.org' in sender:
         print "Error in sender ===", sender

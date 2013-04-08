@@ -20,6 +20,10 @@ cur.execute('''CREATE TABLE IF NOT EXISTS Messages
 cur.execute('''CREATE TABLE IF NOT EXISTS Mapping 
     (old TEXT, new TEXT)''')
 
+# This will be manually filled in
+cur.execute('''CREATE TABLE IF NOT EXISTS DNSMapping 
+    (old TEXT, new TEXT)''')
+
 start = 0
 many = 0
 while True:

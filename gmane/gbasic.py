@@ -4,19 +4,6 @@ import urllib
 import dateutil.parser as parser
 import zlib
 
-def fixemail(sender) :
-    mpieces = sender.split("@")
-    if len(mpieces) != 2 : return (sender,None)
-    dns = mpieces[1]
-    x = dns
-    pieces = dns.split(".")
-    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") :
-        dns = ".".join(pieces[-2:])
-    else:
-        dns = ".".join(pieces[-3:])
-    if dns != x : print x,dns
-    return (mpieces[0] + '@' + dns, dns)
-
 conn = sqlite3.connect('index.sqlite')
 conn.text_factory = str
 cur = conn.cursor()
@@ -39,8 +26,6 @@ for message_row in cur :
 
 print "Loaded messages=",len(messages),"subjects=",len(subjects),"senders=",len(senders)
 
-print type(messages)
-
 sendcounts = dict()
 sendorgs = dict()
 for (message_id, message) in messages.items():
@@ -49,16 +34,21 @@ for (message_id, message) in messages.items():
     pieces = senders[sender].split("@")
     if len(pieces) != 2 : continue
     dns = pieces[1]
-    x = dns
-    pieces = dns.split(".")
-    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") :
-        dns = ".".join(pieces[-2:])
-    else:
-        dns = ".".join(pieces[-3:])
-    if dns != x : print x,dns
+    sendorgs[dns] = sendorgs.get(dns,0) + 1
+
+print ''
+print 'Top 40 Email list participants'
 
 x = sorted(sendcounts, key=sendcounts.get, reverse=True)
-for k in x:
+for k in x[:40]:
     print senders[k], sendcounts[k]
     if sendcounts[k] < 10 : break
+
+print ''
+print 'Top 40 Email list organizations'
+
+x = sorted(sendorgs, key=sendorgs.get, reverse=True)
+for k in x[:40]:
+    print k, sendorgs[k]
+    if sendorgs[k] < 10 : break
 

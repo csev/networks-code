@@ -38,3 +38,5 @@ nosetests.xml
 *.sqlite
 *.json
 *.zip
+
+.DS_Store
