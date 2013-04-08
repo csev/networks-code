@@ -39,7 +39,7 @@ def fixsender(sender,allsenders=None) :
     dns = mpieces[1]
     x = dns
     pieces = dns.split(".")
-    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") :
+    if dns.endswith(".edu") or dns.endswith(".com") or dns.endswith(".org") or dns.endswith(".net") :
         dns = ".".join(pieces[-2:])
     else:
         dns = ".".join(pieces[-3:])

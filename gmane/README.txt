@@ -128,27 +128,24 @@ The first, simplest data analysis is to do a "who does the most" and "which
 organzation does the most"?  This is done using gbasic.py:
 
 python gbasic.py 
+How many to dump? 5
 Loaded messages= 51330 subjects= 25033 senders= 1584
 
-Top 40 Email list participants
+Top 5 Email list participants
 steve.swinsburg@gmail.com 2657
 azeckoski@unicon.net 1742
 ieb@tfd.co.uk 1591
-...
+csev@umich.edu 1304
+david.horwitz@uct.ac.za 1184
 
-Top 40 Email list organizations
+Top 5 Email list organizations
 gmail.com 7339
 umich.edu 6243
 uct.ac.za 2451
 indiana.edu 2258
-...
+unicon.net 2055
 
 You can look at the data in index.sqlite and if you find a problem, you 
 can update the Mapping table and DNSMapping table in content.sqlite and
 re-run gmodel.py.
-
-
-
-
-
 

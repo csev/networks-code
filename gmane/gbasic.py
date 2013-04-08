@@ -4,6 +4,8 @@ import urllib
 import dateutil.parser as parser
 import zlib
 
+howmany = int(raw_input("How many to dump? "))
+
 conn = sqlite3.connect('index.sqlite')
 conn.text_factory = str
 cur = conn.cursor()
@@ -37,18 +39,18 @@ for (message_id, message) in messages.items():
     sendorgs[dns] = sendorgs.get(dns,0) + 1
 
 print ''
-print 'Top 40 Email list participants'
+print 'Top',howmany,'Email list participants'
 
 x = sorted(sendcounts, key=sendcounts.get, reverse=True)
-for k in x[:40]:
+for k in x[:howmany]:
     print senders[k], sendcounts[k]
     if sendcounts[k] < 10 : break
 
 print ''
-print 'Top 40 Email list organizations'
+print 'Top',howmany,'Email list organizations'
 
 x = sorted(sendorgs, key=sendorgs.get, reverse=True)
-for k in x[:40]:
+for k in x[:howmany]:
     print k, sendorgs[k]
     if sendorgs[k] < 10 : break
 
