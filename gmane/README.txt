@@ -21,6 +21,14 @@ its data in a database and can be interrupted and re-started
 as often as needed.   It may take many hours to pull all the data
 down.  So you may need to restart several times.
 
+To give you a head-start, I have put up 600MB of pre-spidered Sakai 
+email here:
+
+https://online.dr-chuck.com/files/sakai/email/content.sqlite
+
+If you download this, you can "catch up with the latest" by
+running gmane.py.
+
 Here is a run of gmane.py getting the last five messages of the
 sakai developer list:
 
@@ -169,4 +177,9 @@ Top 10 Oranizations
 Output written to gline.jsonp
 
 Its output is written to gline.jsonp which is visualized using gline.htm.
+
+As always - comments welcome.
+
+-- Dr. Chuck
+Tue Apr  9 08:30:32 EDT 2013
 

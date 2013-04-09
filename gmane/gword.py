@@ -31,7 +31,7 @@ for message_row in cur :
 x = sorted(counts, key=counts.get, reverse=True)
 highest = None
 lowest = None
-for k in x[:250]:
+for k in x[:100]:
     if highest is None or highest < counts[k] :
         highest = counts[k]
     if lowest is None or lowest > counts[k] :
