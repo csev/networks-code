@@ -36,7 +36,9 @@ for k in x[:250]:
         highest = counts[k]
     if lowest is None or lowest > counts[k] :
         lowest = counts[k]
-print highest,lowest
+print 'Range of counts:',highest,lowest
+
+# Spread the font sizes across 20-100 based on the count
 bigsize = 80
 smallsize = 20
 

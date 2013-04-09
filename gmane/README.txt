@@ -149,3 +149,24 @@ You can look at the data in index.sqlite and if you find a problem, you
 can update the Mapping table and DNSMapping table in content.sqlite and
 re-run gmodel.py.
 
+There is a simple vizualization of the word frequence in the subject lines
+in the file gword.py:
+
+python gword.py
+Range of counts: 33229 129
+Output written to gword.js
+
+This produces the file gword.js which you can visualize using the file 
+gword.htm.
+
+A second visualization is in gline.py.  It visualizes email participation by 
+organizations over time.
+
+python gline.py 
+Loaded messages= 51330 subjects= 25033 senders= 1584
+Top 10 Oranizations
+['gmail.com', 'umich.edu', 'uct.ac.za', 'indiana.edu', 'unicon.net', 'tfd.co.uk', 'berkeley.edu', 'longsight.com', 'stanford.edu', 'ox.ac.uk']
+Output written to gline.js
+
+Its output is written to gline.js which is visualized using gline.htm.
+
