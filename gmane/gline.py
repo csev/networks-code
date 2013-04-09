@@ -38,8 +38,8 @@ for (message_id, message) in messages.items():
 
 # pick the top schools
 orgs = sorted(sendorgs, key=sendorgs.get, reverse=True)
-orgs = orgs[:15]
-print "Top 15 Oranizations"
+orgs = orgs[:10]
+print "Top 10 Oranizations"
 print orgs
 
 counts = dict()
