@@ -2,8 +2,13 @@ import sqlite3
 import time
 import urllib
 import re
-import dateutil.parser as parser
 import zlib
+from datetime import datetime, timedelta
+# Not all systems have this
+try:
+    import dateutil.parser as parser 
+except:
+    pass
 
 dnsmapping = dict()
 mapping = dict()
@@ -48,6 +53,50 @@ def fixsender(sender,allsenders=None) :
     dns = dnsmapping.get(dns,dns)
     return mpieces[0] + '@' + dns
 
+def parsemaildate(md) :
+    # See if we have dateutil
+    try:
+        pdate = parser.parse(tdate)
+        test_at = pdate.isoformat()
+        return test_at
+    except:
+        pass
+
+    # Non-dateutil version - we try our best
+
+    pieces = md.split()
+    notz = " ".join(pieces[:4]).strip()
+   
+    # Try a bunch of format variations - strptime() is *lame*
+    dnotz = None
+    for form in [ '%d %b %Y %H:%M:%S', '%d %b %Y %H:%M:%S', 
+        '%d %b %Y %H:%M', '%d %b %Y %H:%M', '%d %b %y %H:%M:%S', 
+        '%d %b %y %H:%M:%S', '%d %b %y %H:%M', '%d %b %y %H:%M' ] :
+        try:
+            dnotz = datetime.strptime(notz, form)
+            break
+        except:
+            continue
+
+    if dnotz is None :
+        # print 'Bad Date:',md
+        return None
+
+    iso = dnotz.isoformat()
+
+    tz = "+0000"
+    try:
+        tz = pieces[4]
+        ival = int(tz) # Only want numeric timezone values
+        if tz == '-0000' : tz = '+0000'
+        tzh = tz[:3]
+        tzm = tz[3:]
+        tz = tzh+":"+tzm
+    except:
+        pass
+
+    return iso+tz
+
 # Parse out the info...
 def parseheader(hdr, allsenders=None):
     if hdr is None or len(hdr) < 1 : return None
@@ -70,9 +119,9 @@ def parseheader(hdr, allsenders=None):
         tdate = y[0]
         tdate = tdate[:26]
         try:
-            pdate = parser.parse(tdate)
-            sent_at = pdate.isoformat()
-        except:
+            sent_at = parsemaildate(tdate)
+        except Exception, e:
+            # print 'Date ignored ',tdate, e
             return None
 
     subject = None
